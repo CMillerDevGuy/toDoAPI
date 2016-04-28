@@ -1,6 +1,7 @@
 var express = require('express');
 var app = express();
-var bodyParser = require('body-parser');
+var bodyParser = require('body-parser')
+var _ = require('underscore');
 var PORT = process.env.PORT || 8000;
 var todos = [];
 var toDoNextId = 1;
@@ -24,30 +25,37 @@ app.post('/todos', function(req, res) {
     var body = req.body;
     addTodo(body).then(function(success){
         res.json(success);
+    }, function(err){
+        res.status(404).send(err.errorMessage);
     });
 });
 
 
 function addTodo(todo){
     return new Promise(function(resolve, reject){
-        todo.id = toDoNextId;
-        todos.push(todo);
-        toDoNextId++;
-        resolve(todo);
+        if(!_.isBoolean(todo.completed) || !_.isString(todo.description) || todo.description.trim().length === 0){
+            reject({
+                errorMessage: 'Invalid Todo'
+            })
+        }else{
+            var newTodo = _.pick(todo, 'completed', 'description');
+            newTodo.description = todo.description.trim();
+            newTodo.id = toDoNextId;
+            todos.push(newTodo);
+            toDoNextId++;
+            resolve(newTodo);
+        }
+
     })
 }
 
 function searchTodosById(toDoId){
     return new Promise(function(resolve, reject){
-        var found = false;
         var id = parseInt(toDoId);
-        for(var i = 0; i < todos.length; i++){
-            if(todos[i].id == id){
-                found = true;
-                resolve(todos[i]);
-            }
-        }
-        if(!found){
+        var matchedTodo = _.findWhere(todos, {id: id});
+        if(matchedTodo){
+            resolve(matchedTodo);
+        } else{
             reject({
                 errorMessage: "No Todo with such id"
             })
