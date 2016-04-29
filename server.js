@@ -9,7 +9,14 @@ var toDoNextId = 1;
 app.use(bodyParser.json());
 
 app.get('/todos', function(req, res){
-    res.json(todos);
+    var quesryParams = req.query;
+    var filteredTodos = todos;
+    if(quesryParams.hasOwnProperty('completed') && quesryParams.completed === 'true'){
+        filteredTodos = _.where(filteredTodos, {completed:true})
+    } else if (quesryParams.hasOwnProperty('completed') && quesryParams.completed === 'false'){
+        filteredTodos = _.where(filteredTodos, {completed:false})
+    }
+    res.json(filteredTodos);
 });
 
 app.get('/todos/:id', function(req, res){
