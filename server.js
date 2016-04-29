@@ -1,7 +1,8 @@
 var express = require('express');
 var app = express();
-var bodyParser = require('body-parser')
+var bodyParser = require('body-parser');
 var _ = require('underscore');
+var db = require('./db.js');
 var PORT = process.env.PORT || 8000;
 var todos = [];
 var toDoNextId = 1;
@@ -38,10 +39,10 @@ app.get('/todos/:id', function(req, res){
 
 app.post('/todos', function(req, res) {
     var body = req.body;
-    addTodo(body).then(function(success){
-        res.json(success);
+    db.todo.create(body).then(function(success){
+        res.json(success.toJSON());
     }, function(err){
-        res.status(404).send(err.errorMessage);
+        res.status(404).json(err);
     });
 });
 
@@ -94,25 +95,6 @@ function updateTodo(todo, id){
     })
 }
 
-
-function addTodo(todo){
-    return new Promise(function(resolve, reject){
-        if(!_.isBoolean(todo.completed) || !_.isString(todo.description) || todo.description.trim().length === 0){
-            reject({
-                errorMessage: 'Invalid Todo'
-            })
-        }else{
-            var newTodo = _.pick(todo, 'completed', 'description');
-            newTodo.description = todo.description.trim();
-            newTodo.id = toDoNextId;
-            todos.push(newTodo);
-            toDoNextId++;
-            resolve(newTodo);
-        }
-
-    })
-}
-
 function searchTodosById(toDoId){
     return new Promise(function(resolve, reject){
         var id = parseInt(toDoId);
@@ -131,6 +113,10 @@ app.get('/', function(req, res){
     res.send('Todo API root');
 });
 
-app.listen(PORT, function(){
-    console.log('Listening on port: ' + PORT);
+db.sequelize.sync({force: true}).then(function(){
+    app.listen(PORT, function(){
+        console.log('Listening on port: ' + PORT);
+    });
 });
+
+
