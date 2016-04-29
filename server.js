@@ -16,6 +16,14 @@ app.get('/todos', function(req, res){
     } else if (quesryParams.hasOwnProperty('completed') && quesryParams.completed === 'false'){
         filteredTodos = _.where(filteredTodos, {completed:false})
     }
+
+    if(quesryParams.hasOwnProperty('q') && quesryParams.q.length > 0){
+        var q = quesryParams.q.toLowerCase();
+        filteredTodos = _.filter(filteredTodos, function(obj){
+            return obj.description.toLocaleLowerCase().indexOf(q) > -1;
+        })
+    }
+
     res.json(filteredTodos);
 });
 
