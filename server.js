@@ -30,6 +30,18 @@ app.post('/todos', function(req, res) {
     });
 });
 
+app.delete('/todos/:id', function(req, res){
+    var todoId = parseInt(req.params.id);
+    var matchedTodo = _.findWhere(todos, {id: todoId});
+
+    if(!matchedTodo){
+        res.status(404).send("No matched todo with that id");
+    }else{
+        todos = _.without(todos, matchedTodo);
+        res.status(200).send(matchedTodo);
+    }
+
+})
 
 function addTodo(todo){
     return new Promise(function(resolve, reject){
