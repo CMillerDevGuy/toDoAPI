@@ -2,3 +2,4 @@ node_modules/
 .idea/
 playground/
 deprecated/
+database/dev-todo-api.sqlite
