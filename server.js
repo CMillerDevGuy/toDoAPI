@@ -29,11 +29,16 @@ app.get('/todos', function(req, res){
 });
 
 app.get('/todos/:id', function(req, res){
-    var id = req.params.id;
-    searchTodosById(id).then(function(success){
-        res.json(success);
+    var todoId = parseInt(req.params.id);
+    db.todo.findById(todoId).then(function(success){
+        if(success){
+            res.json(success.toJSON());
+        }else{
+            res.status(404).send('No Todo Found');
+        }
+
     },function(err){
-        res.status(404).send(err.errorMessage);
+        res.status(500).send(err.errorMessage);
     })
 });
 
@@ -92,20 +97,6 @@ function updateTodo(todo, id){
         }
         resolve(_.extend(matchedTodo, validAttributes));
 
-    })
-}
-
-function searchTodosById(toDoId){
-    return new Promise(function(resolve, reject){
-        var id = parseInt(toDoId);
-        var matchedTodo = _.findWhere(todos, {id: id});
-        if(matchedTodo){
-            resolve(matchedTodo);
-        } else{
-            reject({
-                errorMessage: "No Todo with such id"
-            })
-        }
     })
 }
 
