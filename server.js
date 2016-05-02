@@ -90,13 +90,15 @@ app.put('/todos/:id', function(req, res){
 
     db.todo.findById(todoId).then(function(todo){
         if(todo){
-            return todo.update(attributes);
+            todo.update(attributes).then(function(todo){
+                res.json(todo.toJSON());
+            }, function(err){
+                res.status(500).json(err);
+            })
         }else{
             res.status(404).send('No Todo Found');
         }
-    }).then(function(todo){
-        res.json(todo.toJSON());
-    }).catch(function(err){
+    }, function(err){
        res.status(500).json(err);
     });
 });
