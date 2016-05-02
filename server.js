@@ -10,22 +10,32 @@ var toDoNextId = 1;
 app.use(bodyParser.json());
 
 app.get('/todos', function(req, res){
-    var quesryParams = req.query;
-    var filteredTodos = todos;
-    if(quesryParams.hasOwnProperty('completed') && quesryParams.completed === 'true'){
-        filteredTodos = _.where(filteredTodos, {completed:true})
-    } else if (quesryParams.hasOwnProperty('completed') && quesryParams.completed === 'false'){
-        filteredTodos = _.where(filteredTodos, {completed:false})
+    var query = req.query;
+    var where = {};
+
+    if(query.hasOwnProperty('completed') && query.completed === 'true'){
+        where.completed = true;
+    } else if (query.hasOwnProperty('completed') && query.completed === 'false'){
+        where.completed = false;
     }
 
-    if(quesryParams.hasOwnProperty('q') && quesryParams.q.length > 0){
-        var q = quesryParams.q.toLowerCase();
-        filteredTodos = _.filter(filteredTodos, function(obj){
-            return obj.description.toLocaleLowerCase().indexOf(q) > -1;
-        })
+    if(query.hasOwnProperty('q') && query.q.length > 0){
+        where.description = {
+            $like : '%' + query.q + '%'
+        }
     }
 
-    res.json(filteredTodos);
+    db.todo.findAll({where:where}).then(function(todos){
+        if(todos){
+            
+            res.json(todos)
+        } else{
+            res.status(404).send('No Todos Found');
+        }
+    }, function(err){
+        res.status(500).json(err);
+    })
+    
 });
 
 app.get('/todos/:id', function(req, res){
@@ -104,7 +114,7 @@ app.get('/', function(req, res){
     res.send('Todo API root');
 });
 
-db.sequelize.sync({force: true}).then(function(){
+db.sequelize.sync().then(function(){
     app.listen(PORT, function(){
         console.log('Listening on port: ' + PORT);
     });
